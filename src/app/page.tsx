@@ -1,95 +1,71 @@
-import Image from 'next/image'
-import styles from './page.module.css'
+'use client';
+
+import { useForm } from 'react-hook-form';
+import { ZodType, z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+type FormData = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  age: number;
+  password: string;
+  confirmPassword: string;
+};
 
 export default function Home() {
+  // ZOD SCHEMA:
+  const schema: ZodType = z
+    .object({
+      firstName: z.string().min(2).max(10).optional(),
+      lastName: z.string().min(2).max(10).optional(),
+      email: z.string().email().optional(),
+      age: z.number().int().positive().optional(),
+      password: z.string().min(8).max(100).optional(),
+      confirmPassword: z.string().min(8).max(100).optional(),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: 'Passwords must match',
+      path: ['confirmPassword'],
+    });
+
+  // REACT-HOOK-FORM:
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>({ resolver: zodResolver(schema) });
+
+  // Form validation 성공 시 실행되는 함수:
+  const submitData = (data: FormData) => {
+    console.log('성공!', data);
+  };
+
+  // UI:
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+    <div className='App'>
+      <form onSubmit={handleSubmit(submitData)}>
+        <label htmlFor=''>First name:</label>
+        <input type='text' {...register('firstName')} />
+        {errors.firstName && <p>{errors.firstName.message}</p>}
 
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+        <label htmlFor=''>Last name:</label>
+        <input type='text' {...register('lastName')} />
 
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
+        <label htmlFor=''>Email:</label>
+        <input type='email' {...register('email')} />
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
+        <label htmlFor=''>Age:</label>
+        <input type='number' {...(register('age'), { valueAsNumber: true })} />
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore the Next.js 13 playground.</p>
-        </a>
+        <label htmlFor=''>Password:</label>
+        <input type='password' {...register('password')} />
 
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+        <label htmlFor=''>Confirm password:</label>
+        <input type='password' />
+
+        <input type='submit' />
+      </form>
+    </div>
+  );
 }
