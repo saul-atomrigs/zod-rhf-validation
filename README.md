@@ -1,34 +1,58 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# zod-rhf-validation
+zod , react-hook-form 연동하여 이름, 이메일, 패스워드 등 form validation 합니다. 참고자료: (https://www.youtube.com/watch?v=dldjCPa9ZW4)
 
-## Getting Started
+## 프로세스
+1. `yarn add zod react-hook-form @hookform/resolvers`
+2. ```
+     // ZOD SCHEMA:
+    const schema: ZodType = z
+      .object({
+        firstName: z.string().min(2).max(10).optional(),
+        lastName: z.string().min(2).max(10).optional(),
+        email: z.string().email().optional(),
+        age: z.number().int().positive().optional(),
+        password: z.string().min(8).max(100).optional(),
+        confirmPassword: z.string().min(8).max(100).optional(),
+      })
+      .refine((data) => data.password === data.confirmPassword, {
+        message: 'Passwords must match',
+        path: ['confirmPassword'],
+      });
+3. ```
+    // REACT-HOOK-FORM:
+    const {
+      register,
+      handleSubmit,
+      formState: { errors },
+    } = useForm<FormData>({ resolver: zodResolver(schema) });
+  
+    // Form validation 성공 시 실행되는 함수:
+    const submitData = (data: FormData) => {
+      console.log('성공!', data);
+    };
+  
+  ```
+4.   ```
+         <form onSubmit={handleSubmit(submitData)}>
+        <label htmlFor=''>First name:</label>
+        <input type='text' {...register('firstName')} />
+        {errors.firstName && <p>{errors.firstName.message}</p>}
 
-First, run the development server:
+        <label htmlFor=''>Last name:</label>
+        <input type='text' {...register('lastName')} />
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-```
+        <label htmlFor=''>Email:</label>
+        <input type='email' {...register('email')} />
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+        <label htmlFor=''>Age:</label>
+        <input type='number' {...(register('age'), { valueAsNumber: true })} />
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+        <label htmlFor=''>Password:</label>
+        <input type='password' {...register('password')} />
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+        <label htmlFor=''>Confirm password:</label>
+        <input type='password' />
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+        <input type='submit' />
+      </form>
+   ```
